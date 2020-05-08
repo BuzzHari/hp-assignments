@@ -1,4 +1,4 @@
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+//pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
 __kernel void vecAdd( __global double *a,
                       __global double *b,
@@ -7,7 +7,10 @@ __kernel void vecAdd( __global double *a,
 {
     //Getting our global therad ID
     int id = get_global_id(0);
-
-    if(id < len)
+    //printf("Len: %d\n", len);
+    if(id < len){
+        //printf("id:%d\n", id);
         c[id] = a[id] + b[id];
+    }
+    return;
 }

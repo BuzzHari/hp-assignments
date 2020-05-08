@@ -23,8 +23,11 @@ int main(int argc, char* argv[]) {
 
     kernel_size = fread(kernel_source, sizeof(char), MAX_KERNEL_SIZE, fp);
     fclose(fp);
-    
-    unsigned int len = 100000;
+    unsigned int len; 
+    if(argc > 1)
+        len = atoi(argv[1]);
+    else
+        len = 100000;
 
     // Host input vectors
     int *h_a;
@@ -47,11 +50,28 @@ int main(int argc, char* argv[]) {
 
     // Size, in bytes of each vector
     size_t bytes = len*sizeof(int);
+    printf("Bytes: %lu\n",bytes);
 
     h_a = (int*) malloc(bytes);
-    h_b = (int*) malloc(bytes);
-    h_c = (int*) malloc(bytes);
+    
+    if(!h_a){
+        printf("h_a malloc error\n");
+        return 0;
+    }
 
+    h_b = (int*) malloc(bytes);
+    
+    if(!h_b){
+        printf("h_b malloc error\n");
+        return 0;
+    }
+    
+    h_c = (int*) malloc(bytes);
+    
+    if(!h_c){
+        printf("h_c malloc error\n");
+        return 0;
+    }
     // Initializing the input host vectors.
 
     for(size_t i = 0; i < len; ++i) {
@@ -63,10 +83,10 @@ int main(int argc, char* argv[]) {
     cl_int err;
     cl_uint num_platforms;
     // Number of work items in each local work group
-    local_size = 64;
+    local_size = 512;
 
-    global_size = ceil(len / (int)local_size) * local_size;
-
+    global_size = ceil(len / (float)local_size) * local_size;
+    printf("Global Size: %lu\n", global_size);
     // Get Platform id.
     err = clGetPlatformIDs(0, NULL, &num_platforms);
 
@@ -181,10 +201,26 @@ int main(int argc, char* argv[]) {
     }
     
     // Creating input and output arrays in device memory for calculations.
-    d_a = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL) ;
-    d_b = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL) ;
-    d_c = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, NULL) ;
+    d_a = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err) ;
+    if(err != CL_SUCCESS) {
+        perror("Problem creating buffer d_a.\n");
+        printf("Error Code: %d\n", err);
+        return EXIT_FAILURE;
+    }
     
+    d_b = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err) ;
+    if(err != CL_SUCCESS) {
+        perror("Problem creating buffer d_b.\n");
+        printf("Error Code: %d\n", err);
+        return EXIT_FAILURE;
+    }
+    
+    d_c = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, &err) ;
+    if(err != CL_SUCCESS) {
+        perror("Problem creating buffer d_c.\n");
+        printf("Error Code: %d\n", err);
+        return EXIT_FAILURE;
+    }
     // Writing our data set into the device input buffer.
     // Enqueue commands to write to a buffer object from host memory.
     err = clEnqueueWriteBuffer(queue, d_a, CL_TRUE, 0, bytes, h_a, 0, NULL, NULL);
@@ -221,11 +257,19 @@ int main(int argc, char* argv[]) {
     // Waiting for the command queue to get serviced before reading back results.
     // Blocks until all previousl queued OpenCL commands in a command-queue
     // are issued the devices and have completed.
-    clFinish(queue);
-
+    err = clFinish(queue);
+    if(err != CL_SUCCESS) {
+        perror("Problem with CL Finish.\n");
+        printf("Error Code: %d\n", err);
+        return EXIT_FAILURE;
+    }
     // Read teh reuslts from the device.
-    clEnqueueReadBuffer(queue, d_c, CL_TRUE, 0, bytes, h_c, 0, NULL, NULL);
-    
+    err = clEnqueueReadBuffer(queue, d_c, CL_TRUE, 0, bytes, h_c, 0, NULL, NULL);
+    if(err != CL_SUCCESS) {
+        perror("Problem reading from buffer.\n");
+        printf("Error Code: %d\n", err);
+        return EXIT_FAILURE;
+    }
     
     size_t sum = 0;
     for(size_t i = 0; i < len; ++i) {
