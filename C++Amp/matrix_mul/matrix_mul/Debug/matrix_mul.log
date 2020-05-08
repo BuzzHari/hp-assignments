@@ -1,0 +1,7 @@
+﻿  matrix_mul.cpp
+D:\Program Files\Microsoft Visual Studio\VC\Tools\MSVC\14.25.28610\include\amp.h(1353,1): fatal error C1001: Internal compiler error.
+  (compiler file 'd:\agent\_work\5\s\src\vctools\Compiler\CxxFE\sl\p1\c\symbols.c', line 10554)
+   To work around this problem, try simplifying or changing the program near the locations listed above.
+  If possible please provide a repro here: https://developercommunity.visualstudio.com
+  Please choose the Technical Support command on the Visual C++
+   Help menu, or open the Technical Support help file for more information
