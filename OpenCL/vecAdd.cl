@@ -1,8 +1,8 @@
 //pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
-__kernel void vecAdd( __global double *a,
-                      __global double *b,
-                      __global double *c,
+__kernel void vecAdd( __global int *a,
+                      __global int *b,
+                      __global int *c,
                       const unsigned int len)
 {
     //Getting our global therad ID
